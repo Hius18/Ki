@@ -1,0 +1,114 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local flying = false
+local flightSpeed = 50 -- Điều chỉnh tốc độ bay nếu cần
+
+print("Script bắt đầu hoạt động") -- Debugging
+
+-- Kiểm tra đối tượng bị nil trước khi truy cập thuộc tính của nó
+local function safeWaitForChild(parent, childName)
+    local child = parent:FindFirstChild(childName)
+    while not child do
+        child = parent:WaitForChild(childName)
+    end
+    return child
+end
+
+-- Sự kiện điều khiển bay
+local userInputService = game:GetService("UserInputService")
+
+local direction = Vector3.new(0, 0, 0)
+local function setDirection(newDirection)
+    direction = newDirection
+end
+
+-- Hàm điều khiển bay
+local function toggleFly()
+    flying = not flying
+    character.Humanoid.PlatformStand = flying
+
+    if flying then
+        print("Bắt đầu bay") -- Debugging
+        while flying do
+            wait(0.1)
+            local newDir = (direction * flightSpeed).Unit * flightSpeed
+            hrp.Velocity = hrp.CFrame:VectorToWorldSpace(newDir)
+        end
+    else
+        hrp.Velocity = Vector3.new(0, 0, 0)
+        print("Dừng bay") -- Debugging
+    end
+end
+
+-- Gán phím tắt để bật/tắt chế độ bay
+userInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F then
+        toggleFly()
+    end
+end)
+
+-- Hàm farm tài nguyên
+local function farmResources()
+    print("Bắt đầu farm tài nguyên") -- Debugging
+    while wait(1) do
+        for _, resource in pairs(game.Workspace.Resources:GetChildren()) do
+            if resource:FindFirstChild("TouchInterest") then
+                hrp.CFrame = resource.CFrame
+                wait(0.1)
+            end
+        end
+    end
+end
+
+-- Hàm farm vườn hoa
+local function farmGardens()
+    print("Bắt đầu farm vườn hoa") -- Debugging
+    while wait(1) do
+        for _, flower in pairs(game.Workspace.Gardens:GetChildren()) do
+if flower:IsA("Model") and flower:FindFirstChild("HumanoidRootPart") then
+                hrp.CFrame = flower.HumanoidRootPart.CFrame
+                wait(0.1)
+            end
+        end
+    end
+end
+
+-- Hàm lấy token từ phần thưởng
+local function collectTokens()
+    print("Bắt đầu lấy token từ phần thưởng") -- Debugging
+    while wait(0.1) do
+        for _, token in pairs(game.Workspace.Collectibles:GetChildren()) do
+            if token:IsA("Part") then -- Lấy token từ mọi phần thưởng
+                hrp.CFrame = token.CFrame
+                wait(0.1)
+            end
+        end
+    end
+end
+
+-- Hàm tìm và đánh Windy Bee
+local function findAndFightWindyBee()
+    print("Bắt đầu tìm và đánh Windy Bee") -- Debugging
+    while wait(1) do
+        for _, bee in pairs(game.Workspace.Bees:GetChildren()) do
+            if bee.Name == "Windy Bee" then
+                repeat
+                    hrp.CFrame = bee.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+                    wait(0.1)
+                    if bee:FindFirstChild("Humanoid") then
+                        bee.Humanoid:TakeDamage(bee.Humanoid.Health) -- Đảm bảo rằng Windy Bee sẽ bị đánh
+                    end
+                until not bee:FindFirstChild("Humanoid") or bee.Humanoid.Health <= 0
+            end
+        end
+    end
+end
+
+-- Bắt đầu farm, săn Windy Bee, và farm vườn hoa
+spawn(farmResources)
+spawn(farmGardens)
+spawn(findAndFightWindyBee)
+spawn(collectTokens)
+
+print("Script đã khởi động xong") -- Debugging
